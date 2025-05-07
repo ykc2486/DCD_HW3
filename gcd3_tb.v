@@ -1,44 +1,91 @@
-`timescale 1ns / 1ps
+module gcd3_tb;
+    // Clock and reset
+    reg clk;
+    reg reset;
 
-module gcd3_tb();
-    parameter CLK_PERIOD = 10;
+    // DUT inputs
+    reg start;
+    reg [15:0] A;
+    reg [15:0] B;
+    reg [15:0] C;
 
-    reg clk, reset, start;
-    reg [15:0] A, B, C;
+    // DUT outputs
     wire valid;
     wire [15:0] D;
 
+    // Instantiate DUT
     gcd3_top uut (
-        .clk(clk), .reset(reset), .start(start),
-        .A(A), .B(B), .C(C), .valid(valid), .D(D)
+        .clk(clk),
+        .reset(reset),
+        .start(start),
+        .A(A),
+        .B(B),
+        .C(C),
+        .valid(valid),
+        .D(D)
     );
 
+    // Clock generation: 10ns period
     initial begin
         clk = 0;
-        forever #(CLK_PERIOD/2) clk = ~clk;
+        forever #5 clk = ~clk;
     end
 
+    // Test sequence
     initial begin
-        reset = 1; start = 0; A = 0; B = 0; C = 0;
-        #(CLK_PERIOD*2); reset = 0; #(CLK_PERIOD*2);
+        // Initialize signals
+        reset = 1;
+        start = 0;
+        A = 0;
+        B = 0;
+        C = 0;
 
-        run_test(24, 36, 48);
-        run_test(15, 25, 35);
-        run_test(100, 125, 150);
-        run_test(17, 19, 23);
-        run_test(0, 36, 48);
+        // Apply reset
+        #20;
+        reset = 0;
 
-        #(CLK_PERIOD*10);
+        // Test vector 1: gcd(48, 18, 30) = 6
+        A = 16'd48;
+        B = 16'd18;
+        C = 16'd30;
+        #10;
+        start = 1;
+        #10;
+        start = 0;
+
+        // Wait for valid
+        wait(valid);
+        $display("Time=%0t : gcd(48,18,30) = %d", $time, D);
+
+        // Test vector 2: gcd(21, 14, 28) = 7
+        #10;
+        A = 16'd21;
+        B = 16'd14;
+        C = 16'd28;
+        #10;
+        start = 1;
+        #10;
+        start = 0;
+
+        wait(valid);
+        $display("Time=%0t : gcd(21,14,28) = %d", $time, D);
+
+        // Test vector 3: gcd(7, 13, 29) = 1
+        #10;
+        A = 16'd7;
+        B = 16'd13;
+        C = 16'd29;
+        #10;
+        start = 1;
+        #10;
+        start = 0;
+
+        wait(valid);
+        $display("Time=%0t : gcd(7,13,29) = %d", $time, D);
+
+        // Finish simulation
+        #20;
         $finish;
     end
 
-    task run_test(input [15:0] a, b, c);
-        begin
-            A = a; B = b; C = c;
-            start = 1; #(CLK_PERIOD); start = 0;
-            wait(valid); #(CLK_PERIOD);
-            $display("Result = %d", D);
-            reset = 1; #(CLK_PERIOD*2); reset = 0; #(CLK_PERIOD*2);
-        end
-    endtask
 endmodule

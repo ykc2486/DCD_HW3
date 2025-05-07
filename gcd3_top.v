@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module gcd3_top (
     input  wire clk,
     input  wire reset,

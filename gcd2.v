@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 module gcd2(
     input clk,
     input rst,
